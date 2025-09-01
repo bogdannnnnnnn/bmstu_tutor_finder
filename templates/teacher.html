@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Расписание преподавателя{% endblock %}
+{% block content %}
+  <div class="row" style="justify-content: space-between; align-items: flex-end;">
+    <div>
+      <h2 style="margin: 0 0 6px 0;">{{ info.title }}</h2>
+      <div class="muted">UUID: {{ info.uuid }}</div>
+    </div>
+    <div class="right">
+      {% if info.link %}
+      <a class="btn" href="{{ info.link }}" target="_blank" rel="noopener">Экспорт ICS</a>
+      {% endif %}
+      <a class="btn" href="{{ url_for('api_teacher', uuid=info.uuid) }}" target="_blank" rel="noopener">JSON</a>
+    </div>
+  </div>
+
+  {% if not schedule %}
+    <div class="card">Расписание пусто.</div>
+  {% else %}
+    <div class="card muted">Всего занятий: {{ schedule | length }}</div>
+    <ul class="list">
+      {% for item in schedule %}
+        <li class="card">
+          <div class="row" style="justify-content: space-between;">
+            <div><span class="badge">{{ ru_days.get(item.day, item.day) }}</span></div>
+            <div class="muted">{{ to_week_label(item.week) }}</div>
+          </div>
+          <div style="margin-top: 6px;">
+            <strong>{{ item.discipline.fullName or item.discipline.shortName }}</strong>
+            <div class="muted">{{ item.startTime }} — {{ item.endTime }} • Пара {{ item.time }}</div>
+          </div>
+          <div class="row" style="gap: 16px; margin-top: 6px;">
+            <div>
+              <div class="muted">Группы</div>
+              <div>{{ item.groups | map(attribute='name') | join(', ') }}</div>
+            </div>
+            <div>
+              <div class="muted">Аудитории</div>
+              <div>{% for a in item.audiences %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+{% endblock %}
+
+

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Поиск преподавателя{% endblock %}
+{% block content %}
+  <form method="get" action="{{ url_for('search') }}" class="row" style="gap:12px;">
+    <input type="text" name="q" placeholder="Введите фамилию, например, ‘Хорькова’" class="grow"/>
+    <button type="submit">Найти</button>
+  </form>
+
+  <details class="card" style="margin-top:14px;">
+    <summary>Вставить Cookie для доступа</summary>
+    <form method="post" action="{{ url_for('set_cookie') }}" class="row" style="gap:8px; margin-top:10px;">
+      <input type="text" name="cookie" placeholder="Полная строка Cookie от lks.bmstu.ru" class="grow"/>
+      <button type="submit">Сохранить</button>
+      {% if cookie_set %}
+      <a class="btn" href="{{ url_for('clear_cookie') }}">Очистить</a>
+      {% endif %}
+    </form>
+    <div class="muted" style="margin-top:8px;">Cookie хранится в серверной сессии только на время запуска.</div>
+  </details>
+{% endblock %}
+
+

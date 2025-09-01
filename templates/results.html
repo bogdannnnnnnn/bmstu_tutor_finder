@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Результаты поиска{% endblock %}
+{% block content %}
+  <div class="muted">Запрос: «{{ q }}»</div>
+  {% if not results %}
+    <div class="card">Ничего не найдено.</div>
+  {% else %}
+    <ul class="list">
+      {% for row in results %}
+        <li class="card row" style="justify-content: space-between;">
+          <div>
+            <div><strong>{{ row.title }}</strong></div>
+            <div class="muted">UUID: {{ row.uuid }}</div>
+          </div>
+          <div class="right">
+            <a class="btn" href="{{ url_for('teacher', uuid=row.uuid) }}">Открыть расписание</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
+
+
