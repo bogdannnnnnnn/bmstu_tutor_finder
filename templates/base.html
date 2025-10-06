@@ -1,13 +1,27 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script>
+      (function() {
+        try {
+          var storedTheme = localStorage.getItem("bmstu-theme");
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = storedTheme || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (err) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
     <title>{% block title %}BMSTU Teacher Schedule{% endblock %}</title>
     <style>
       :root { color-scheme: light; }
+      :root[data-theme="dark"] { color-scheme: dark; }
       *, *::before, *::after { box-sizing: border-box; }
       body { font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: #f3f5fb; color: #1b1f23; line-height: 1.5; }
+      body, .app-main, .search-panel, .card, input[type=text], .header-search input[type=text], .schedule-grid thead th, .schedule-grid tbody th, .schedule-grid tbody td, .slot-event, .slot-split, .flash { transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
       a { color: inherit; }
       .app-header { background: #1f6feb; color: #fff; padding: 16px 20px; box-shadow: 0 8px 16px rgba(31, 111, 235, 0.18); }
       .app-header__wrap { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -16,6 +30,9 @@
       .header-search input[type=text] { flex: 1 1 auto; padding: 9px 12px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 8px; background: rgba(255, 255, 255, 0.18); color: #fff; }
       .header-search input[type=text]::placeholder { color: rgba(255, 255, 255, 0.78); }
       .header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+      .theme-toggle { min-width: 0; padding: 9px 12px; white-space: nowrap; }
+      .theme-toggle__icon { font-size: 1rem; line-height: 1; }
+      .theme-toggle__text { font-size: 0.95rem; }
       .cookie-status { padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; background: rgba(12, 41, 108, 0.38); color: #f6f9ff; }
       .cookie-status.is-empty { background: rgba(12, 41, 108, 0.18); color: rgba(255, 255, 255, 0.84); }
       button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 8px; border: 1px solid #1f6feb; background: #1f6feb; color: #fff; font-weight: 500; cursor: pointer; text-decoration: none; transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -62,6 +79,47 @@
       .slot-week-label { font-size: 0.75rem; font-weight: 600; color: #1f2b86; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 4px; display: block; }
       details.card summary { cursor: pointer; font-weight: 600; }
       details.card[open] { background: #f8f9ff; }
+      [data-theme="dark"] body { background: #0f172a; color: #e2e8f0; }
+      [data-theme="dark"] a { color: inherit; }
+      [data-theme="dark"] .app-header { background: #111f3f; box-shadow: 0 8px 16px rgba(1, 12, 40, 0.55); }
+      [data-theme="dark"] .header-search input[type=text] { border: 1px solid rgba(148, 163, 184, 0.45); background: rgba(30, 41, 59, 0.65); color: #f8fafc; }
+      [data-theme="dark"] .header-search input[type=text]::placeholder { color: rgba(226, 232, 240, 0.7); }
+      [data-theme="dark"] .header-actions { color: #f8fafc; }
+      [data-theme="dark"] .cookie-status { background: rgba(96, 165, 250, 0.22); color: #e0f2fe; }
+      [data-theme="dark"] .cookie-status.is-empty { background: rgba(148, 163, 184, 0.18); color: rgba(226, 232, 240, 0.8); }
+      [data-theme="dark"] button, [data-theme="dark"] .btn { background: #3b82f6; border-color: #3b82f6; color: #f8fbff; }
+      [data-theme="dark"] button:hover, [data-theme="dark"] .btn:hover { background: #2563eb; border-color: #2563eb; }
+      [data-theme="dark"] header .btn { background: rgba(148, 163, 184, 0.14); border-color: rgba(148, 163, 184, 0.35); color: #f8fafc; }
+      [data-theme="dark"] header .btn:hover { background: rgba(148, 163, 184, 0.26); border-color: rgba(148, 163, 184, 0.45); }
+      [data-theme="dark"] .btn-ghost { background: transparent; border-color: rgba(148, 163, 184, 0.35); color: #f8fafc; }
+      [data-theme="dark"] .btn-ghost:hover { background: rgba(148, 163, 184, 0.18); }
+      [data-theme="dark"] .btn-secondary { background: #1e293b; color: #f8fafc; border-color: #334155; }
+      [data-theme="dark"] .btn-secondary:hover { background: #334155; border-color: #3b4c68; }
+      [data-theme="dark"] .app-main { background: #111c33; box-shadow: 0 18px 38px -24px rgba(0, 0, 0, 0.6); }
+      [data-theme="dark"] .search-panel { background: linear-gradient(145deg, #1e2d52 0%, #111c33 70%); border: 1px solid #1f2a43; box-shadow: 0 20px 38px -32px rgba(0, 0, 0, 0.65); }
+      [data-theme="dark"] .search-panel h1 { color: #f1f5f9; }
+      [data-theme="dark"] .muted { color: #94a3b8; }
+      [data-theme="dark"] input[type=text] { border: 1px solid #243552; background: #14213b; color: #e2e8f0; }
+      [data-theme="dark"] input[type=text]:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
+      [data-theme="dark"] .card { background: #14213b; border: 1px solid #243552; }
+      [data-theme="dark"] details.card[open] { background: #18233d; }
+      [data-theme="dark"] .badge { background: rgba(59, 130, 246, 0.18); color: #bfdbfe; }
+      [data-theme="dark"] .flash.ok { background: rgba(34, 197, 94, 0.16); border-color: rgba(74, 222, 128, 0.32); color: #4ade80; }
+      [data-theme="dark"] .flash.warn { background: rgba(234, 179, 8, 0.16); border-color: rgba(250, 204, 21, 0.3); color: #facc15; }
+      [data-theme="dark"] .flash.err { background: rgba(248, 113, 113, 0.18); border-color: rgba(248, 113, 113, 0.32); color: #fca5a5; }
+      [data-theme="dark"] .schedule-grid { background: #111c33; }
+      [data-theme="dark"] .schedule-grid thead th { background: #1a2744; color: #f8fafc; border-color: #233353; }
+      [data-theme="dark"] .schedule-grid thead th.time-col { color: #f8fafc; }
+      [data-theme="dark"] .schedule-grid tbody th.time-col { background: #16294d; color: #cbd5f5; border-color: #233353; }
+      [data-theme="dark"] .schedule-grid tbody td { background: #111c33; border-color: #233353; }
+      [data-theme="dark"] .schedule-grid tbody td.empty { background: #0f172a; }
+      [data-theme="dark"] .slot-event { background: #18294a; border-color: #233353; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+      [data-theme="dark"] .slot-title { color: #f8fafc; }
+      [data-theme="dark"] .slot-time { color: #93c5fd; }
+      [data-theme="dark"] .slot-meta { color: #94a3b8; }
+      [data-theme="dark"] .slot-split { background: #16233d; border-color: #233353; }
+      [data-theme="dark"] .slot-column + .slot-column { border-left: 1px solid #233353; }
+      [data-theme="dark"] .slot-week-label { color: #93c5fd; }
       @media (max-width: 900px) {
         .app-main { margin: 20px; padding: 24px; }
       }
@@ -88,6 +146,10 @@
         {% endif %}
         <div class="header-actions">
           <a class="btn btn-ghost" href="{{ login_url }}" target="_blank" rel="noopener">Войти в ЛК БМСТУ</a>
+          <button type="button" class="btn theme-toggle" id="themeToggle" aria-pressed="false">
+            <span class="theme-toggle__icon" aria-hidden="true">&#9789;</span>
+            <span class="theme-toggle__text">Темная тема</span>
+          </button>
           <span class="cookie-status {{ 'is-set' if cookie_set else 'is-empty' }}">{{ 'Cookie установлена' if cookie_set else 'Cookie не задана' }}</span>
           {% if cookie_set %}
           <a class="btn btn-ghost" href="{{ url_for('clear_cookie') }}">Сбросить Cookie</a>
@@ -105,8 +167,42 @@
       {% endwith %}
       {% block content %}{% endblock %}
     </main>
+    <script>
+      (function() {
+        var storageKey = 'bmstu-theme';
+        var root = document.documentElement;
+        var toggle = document.getElementById('themeToggle');
+        if (!toggle) {
+          return;
+        }
+        var icon = toggle.querySelector('.theme-toggle__icon');
+        var label = toggle.querySelector('.theme-toggle__text');
+        function applyTheme(theme) {
+          root.setAttribute('data-theme', theme);
+          toggle.setAttribute('aria-pressed', theme === 'dark');
+          if (icon) {
+            icon.textContent = theme === 'dark' ? String.fromCharCode(0x2600) : String.fromCharCode(0x263D);
+          }
+          if (label) {
+            label.textContent = theme === 'dark' ? 'Светлая тема' : 'Темная тема';
+          }
+          try {
+            localStorage.setItem(storageKey, theme);
+          } catch (err) {
+            /* ignore storage errors */
+          }
+        }
+        var initialTheme = root.getAttribute('data-theme') || 'light';
+        applyTheme(initialTheme);
+        toggle.addEventListener('click', function() {
+          var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          applyTheme(next);
+        });
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
