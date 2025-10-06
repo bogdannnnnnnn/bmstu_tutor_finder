@@ -1,22 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}Поиск преподавателя{% endblock %}
 {% block content %}
-  <form method="get" action="{{ url_for('search') }}" class="row" style="gap:12px;">
-    <input type="text" name="q" placeholder="Введите фамилию, например, ‘Хорькова’" class="grow"/>
-    <button type="submit">Найти</button>
-  </form>
+  <section class="search-panel">
+    <h1>Поиск преподавателя</h1>
+    <form method="get" action="{{ url_for('search') }}" class="search-form" role="search">
+      <input type="text" name="q" placeholder="Например, Иванов или 'программирование'" value="{{ request.args.get('q', '') }}" autocomplete="off"/>
+      <button type="submit" class="btn">Найти</button>
+    </form>
+    <p class="muted" style="margin-top: 10px;">Можно вводить фамилию, дисциплину или часть названия кафедры.</p>
+  </section>
 
   <details class="card" style="margin-top:14px;">
-    <summary>Вставить Cookie для доступа</summary>
-    <form method="post" action="{{ url_for('set_cookie') }}" class="row" style="gap:8px; margin-top:10px;">
-      <input type="text" name="cookie" placeholder="Полная строка Cookie от lks.bmstu.ru" class="grow"/>
-      <button type="submit">Сохранить</button>
+    <summary>Добавить Cookie для доступа к закрытому расписанию</summary>
+    <form method="post" action="{{ url_for('set_cookie') }}" class="row" style="gap:8px; margin-top:12px; flex-wrap: wrap;">
+      <input type="text" name="cookie" placeholder="Полная строка Cookie с lks.bmstu.ru" class="grow" value="{{ cookie_prefill or '' }}" autocomplete="off"/>
+      <button type="submit" class="btn">Сохранить</button>
       {% if cookie_set %}
-      <a class="btn" href="{{ url_for('clear_cookie') }}">Очистить</a>
+      <a class="btn btn-secondary" href="{{ url_for('clear_cookie') }}">Очистить</a>
       {% endif %}
     </form>
-    <div class="muted" style="margin-top:8px;">Cookie хранится в серверной сессии только на время запуска.</div>
+    <div class="muted" style="margin-top:10px;">Cookie сохраняется только в этом браузере. Можно передать ссылку вида <code>?cookie=...</code>, чтобы заполнить поле автоматически.</div>
   </details>
 {% endblock %}
-
-

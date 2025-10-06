@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Результаты поиска{% endblock %}
 {% block content %}
-  <div class="muted">Запрос: «{{ q }}»</div>
+  <div class="muted" style="margin-bottom: 12px;">Запрос: <strong>{{ q }}</strong></div>
   {% if not results %}
     <div class="card">Ничего не найдено.</div>
   {% else %}
     <ul class="list">
       {% for row in results %}
-        <li class="card row" style="justify-content: space-between;">
+        <li class="card row" style="justify-content: space-between; align-items: center;">
           <div>
             <div><strong>{{ row.title }}</strong></div>
             <div class="muted">UUID: {{ row.uuid }}</div>
@@ -20,5 +20,3 @@
     </ul>
   {% endif %}
 {% endblock %}
-
-

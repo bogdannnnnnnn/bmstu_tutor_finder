@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import unquote
 
 import requests
+from collections import defaultdict
 from flask import (
     Flask,
     flash,
@@ -22,6 +24,10 @@ UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
+LOGIN_URL = os.environ.get(
+    "LOGIN_URL",
+    "https://lks.bmstu.ru/portal3/login?back=https%3A%2F%2Flks.bmstu.ru%2Fprofile",
+)
 
 
 def create_app() -> Flask:
@@ -32,7 +38,24 @@ def create_app() -> Flask:
     def inject_globals() -> Dict[str, Any]:
         return {
             "cookie_set": bool(session.get("lks_cookie")),
+            "login_url": LOGIN_URL,
         }
+
+    def extract_cookie_from_query() -> str:
+        raw_query = request.query_string or b""
+        if not raw_query:
+            return ""
+        for chunk in raw_query.split(b"&"):
+            if not chunk:
+                continue
+            if chunk.startswith(b"cookie="):
+                raw_value = chunk[len(b"cookie=") :]
+                try:
+                    encoded = raw_value.decode("ascii")
+                except UnicodeDecodeError:
+                    encoded = raw_value.decode("utf-8", errors="ignore")
+                return unquote(encoded).strip()
+        return ""
 
     def get_auth_headers() -> Dict[str, str]:
         headers = {
@@ -61,9 +84,18 @@ def create_app() -> Flask:
     @app.get("/")
     def index() -> str:
         q = request.args.get("q", "").strip()
+        cookie_from_link = extract_cookie_from_query()
+        if not cookie_from_link:
+            cookie_from_link = request.args.get("cookie", "").strip()
+        if cookie_from_link:
+            session["lks_cookie"] = cookie_from_link
+            flash("Cookie установлены из ссылки", "ok")
+            if q:
+                return redirect(url_for("search", q=q))
+            return redirect(url_for("index"))
         if q:
             return redirect(url_for("search", q=q))
-        return render_template("index.html")
+        return render_template("index.html", show_header_search=False, cookie_prefill=session.get("lks_cookie", ""))
 
     @app.post("/cookie")
     def set_cookie() -> str:
@@ -111,24 +143,80 @@ def create_app() -> Flask:
         payload = data.get("data", {})
         schedule = payload.get("schedule", [])
         # Sort by (day, time)
+
+
         schedule_sorted = sorted(
             schedule,
             key=lambda x: (int(x.get("day", 0)), int(x.get("time", 0))),
         )
 
-        # Day mapping per BMSTU: 1=Mon ... 7=Sun; API shows ints 1..7 (in sample 4=Thu, 5=Fri, 6=Sat)
         ru_days = {1: "Понедельник", 2: "Вторник", 3: "Среда", 4: "Четверг", 5: "Пятница", 6: "Суббота", 7: "Воскресенье"}
+        week_names = {"all": "Все недели", "ch": "Числитель", "zn": "Знаменатель"}
+
+        def pick_week_key(raw: Optional[str]) -> str:
+            val = (raw or "all").lower()
+            if val not in ("ch", "zn"):
+                return "all"
+            return val
+
+        def time_sort_key(values: Tuple[str, str, str]) -> Tuple[str, str, str]:
+            start_label, end_label, pair_label = values
+            return (start_label or "", end_label or "", pair_label or "")
+
+        grid: Dict[Tuple[str, str, str], Dict[int, Dict[str, List[Dict[str, Any]]]]] = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(list))
+        )
+        time_keys: List[Tuple[str, str, str]] = []
+        seen_keys: set[Tuple[str, str, str]] = set()
+
+        for item in schedule_sorted:
+            time_key = (
+                item.get("startTime") or "",
+                item.get("endTime") or "",
+                str(item.get("time") or ""),
+            )
+            if time_key not in seen_keys:
+                seen_keys.add(time_key)
+                time_keys.append(time_key)
+            day_key = int(item.get("day", 0) or 0)
+            grid[time_key][day_key][pick_week_key(item.get("week"))].append(item)
+
+        time_keys.sort(key=time_sort_key)
+        day_order = [1, 2, 3, 4, 5, 6, 7]
+        timetable_rows = []
+        for key_start, key_end, pair_label in time_keys:
+            cell_map: Dict[int, Dict[str, Any]] = {}
+            for day in day_order:
+                cell_weeks = grid[(key_start, key_end, pair_label)].get(day, {})
+                cell_other = []
+                for wk, items in cell_weeks.items():
+                    if wk in {"all", "ch", "zn"} or not items:
+                        continue
+                    cell_other.append(
+                        {
+                            "key": wk,
+                            "label": week_names.get(wk, wk or ""),
+                            "items": list(items),
+                        }
+                    )
+                cell_map[day] = {
+                    "all": list(cell_weeks.get("all", [])),
+                    "ch": list(cell_weeks.get("ch", [])),
+                    "zn": list(cell_weeks.get("zn", [])),
+                    "other": cell_other,
+                }
+                cell_map[day]["has_content"] = bool(cell_map[day]["all"] or cell_map[day]["ch"] or cell_map[day]["zn"] or cell_other)
+            timetable_rows.append(
+                {
+                    "start": key_start,
+                    "end": key_end,
+                    "pair": pair_label,
+                    "cells": cell_map,
+                }
+            )
 
         def to_week_label(val: str) -> str:
-            if val == "all":
-                return "все"
-            # На сайте используются термины "числитель/знаменатель"
-            # API кодирует недели как ch/zn. Интерпретируем:
-            if val == "ch":
-                return "числитель"
-            if val == "zn":
-                return "знаменатель"
-            return val or ""
+            return week_names.get(val, val or "")
 
         return render_template(
             "teacher.html",
@@ -136,6 +224,9 @@ def create_app() -> Flask:
             schedule=schedule_sorted,
             ru_days=ru_days,
             to_week_label=to_week_label,
+            day_order=day_order,
+            timetable_rows=timetable_rows,
+            week_names=week_names,
         )
 
     @app.get("/api/teacher/<uuid>")

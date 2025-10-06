@@ -5,32 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>{% block title %}BMSTU Teacher Schedule{% endblock %}</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1b1f23; }
-      header { background: #1f6feb; color: #fff; padding: 12px 16px; }
-      main { max-width: 960px; margin: 20px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.06); padding: 16px; }
+      :root { color-scheme: light; }
+      *, *::before, *::after { box-sizing: border-box; }
+      body { font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background: #f3f5fb; color: #1b1f23; line-height: 1.5; }
+      a { color: inherit; }
+      .app-header { background: #1f6feb; color: #fff; padding: 16px 20px; box-shadow: 0 8px 16px rgba(31, 111, 235, 0.18); }
+      .app-header__wrap { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+      .brand { font-weight: 600; font-size: 1.1rem; text-decoration: none; color: inherit; white-space: nowrap; }
+      .header-search { flex: 1 1 320px; display: flex; align-items: center; gap: 8px; }
+      .header-search input[type=text] { flex: 1 1 auto; padding: 9px 12px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 8px; background: rgba(255, 255, 255, 0.18); color: #fff; }
+      .header-search input[type=text]::placeholder { color: rgba(255, 255, 255, 0.78); }
+      .header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+      .cookie-status { padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; background: rgba(12, 41, 108, 0.38); color: #f6f9ff; }
+      .cookie-status.is-empty { background: rgba(12, 41, 108, 0.18); color: rgba(255, 255, 255, 0.84); }
+      button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 8px; border: 1px solid #1f6feb; background: #1f6feb; color: #fff; font-weight: 500; cursor: pointer; text-decoration: none; transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+      button:hover, .btn:hover { background: #1b5ecb; border-color: #1b5ecb; }
+      header .btn { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.35); color: #fff; }
+      header .btn:hover { background: rgba(255, 255, 255, 0.24); border-color: rgba(255, 255, 255, 0.5); }
+      .btn-ghost { background: transparent; border-color: rgba(255, 255, 255, 0.35); color: #fff; }
+      .btn-ghost:hover { background: rgba(255, 255, 255, 0.24); }
+      .btn-secondary { background: #e0e7ff; color: #1f2b86; border: 1px solid #c7d2fe; }
+      .btn-secondary:hover { background: #c7d2fe; border-color: #b4c2ff; }
+      input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid #ccd4e0; border-radius: 8px; background: #fff; color: #1b1f23; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+      input[type=text]:focus { outline: none; border-color: #1f6feb; box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12); }
+        .app-main { max-width: 1920px; margin: 28px auto; background: #fff; border-radius: 16px; box-shadow: 0 18px 38px -20px rgba(15, 37, 90, 0.35); padding: 28px 32px; }
+      .search-panel { padding: 26px 28px; background: linear-gradient(145deg, #eef2ff 0%, #ffffff 65%); border: 1px solid #dce4ff; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 20px 38px -32px rgba(31, 49, 82, 0.6); }
+      .search-panel h1 { margin: 0 0 12px; font-size: 1.65rem; color: #122654; }
+      .search-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .search-form input[type=text] { flex: 1 1 280px; }
+      .search-form button { flex: 0 0 auto; padding: 10px 18px; }
       .row { display: flex; gap: 8px; align-items: center; }
       .grow { flex: 1 1 auto; }
-      input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid #dde1e6; border-radius: 8px; }
-      button, .btn { display: inline-block; background: #1f6feb; color: #fff; border: 0; padding: 10px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; }
-      .muted { color: #6a737d; font-size: 0.95rem; }
-      .badge { display: inline-block; background: #eef2ff; color: #1f6feb; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-      .list { list-style: none; padding: 0; margin: 0; }
-      .card { border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; margin: 8px 0; }
+      .muted { color: #5c6470; font-size: 0.95rem; }
+      .card { border: 1px solid #e0e4ec; border-radius: 12px; padding: 14px 16px; margin: 10px 0; background: #fdfdff; }
+      .list { list-style: none; margin: 0; padding: 0; }
+      .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: #eef2ff; color: #1f3082; }
       .right { text-align: right; }
-      .flash { margin: 8px 0; padding: 10px 12px; border-radius: 8px; }
-      .flash.ok { background: #e7f5e7; color: #146c2e; }
-      .flash.warn { background: #fff6e6; color: #8a6100; }
-      .flash.err { background: #fee8e7; color: #8f1d18; }
+      .flash { margin: 8px 0 16px; padding: 12px 14px; border-radius: 10px; border: 1px solid transparent; font-weight: 500; }
+      .flash.ok { background: #e7f5e7; border-color: #c9e7cb; color: #106c3c; }
+      .flash.warn { background: #fff5e0; border-color: #f1d6a3; color: #8a5a04; }
+      .flash.err { background: #ffe4e4; border-color: #f3b5b5; color: #8b2020; }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-bottom: 16px; }
+      .timetable-wrapper { margin-top: 20px; overflow-x: auto; overflow-y: hidden; }
+            .schedule-grid { width: 100%; min-width: 2200px; border-collapse: collapse; border-spacing: 0; background: #fff; table-layout: auto; }
+      .schedule-grid thead th { background: #eef2ff; color: #1f2b86; font-weight: 600; padding: 12px; border: 1px solid #dce4ff; text-align: center; }
+      .schedule-grid thead th.time-col { text-align: left; min-width: 160px; }
+      .schedule-grid tbody th.time-col { background: #f4f6ff; color: #162c58; font-weight: 600; padding: 14px 12px; border: 1px solid #dce4ff; border-right: 0; text-align: left; min-width: 160px; }
+      .schedule-grid tbody td { border: 1px solid #e0e4ec; padding: 12px; vertical-align: top; background: #fff; word-break: normal; overflow-wrap: anywhere; min-width: 200px; }
+      .schedule-grid tbody td.empty { background: #f4f6fb; }
+      .slot-event { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 10px; background: #f5f7ff; border: 1px solid #dce4ff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); min-height: 60px; }
+      .slot-title { font-weight: 600; color: #13244b; }\n      .slot-time { font-size: 0.85rem; font-weight: 600; color: #1f2b86; }
+      .slot-meta { font-size: 0.85rem; color: #5c6470; line-height: 1.35; }
+      .slot-split { display: flex; gap: 12px; border: 1px solid #dce4ff; border-radius: 10px; overflow: hidden; background: #f7f8ff; }
+      .slot-column { flex: 1 1 50%; min-width: 200px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+      .slot-column + .slot-column { border-left: 1px solid #dce4ff; }
+      .slot-week-label { font-size: 0.75rem; font-weight: 600; color: #1f2b86; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+      details.card summary { cursor: pointer; font-weight: 600; }
+      details.card[open] { background: #f8f9ff; }
+      @media (max-width: 900px) {
+        .app-main { margin: 20px; padding: 24px; }
+      }
+      @media (max-width: 720px) {
+        .app-header__wrap { flex-direction: column; align-items: stretch; }
+        .header-actions { width: 100%; justify-content: flex-start; }
+        .header-search { width: 100%; order: 3; }
+        .header-actions .btn { width: auto; }
+        .search-form { flex-direction: column; align-items: stretch; }
+        .search-form button { width: 100%; }
+        .toolbar { justify-content: flex-start; }
+      }
     </style>
   </head>
   <body>
-    <header>
-      <div class="row" style="gap:12px; justify-content: space-between;">
-        <div><strong>BMSTU Teacher Schedule</strong></div>
-        <div class="muted">{{ 'Cookie установлена' if cookie_set else 'Cookie не задана' }}</div>
+    <header class="app-header">
+      <div class="app-header__wrap">
+        <a class="brand" href="{{ url_for('index') }}">BMSTU Teacher Schedule</a>
+        {% if show_header_search | default(true) %}
+        <form method="get" action="{{ url_for('search') }}" class="header-search" role="search">
+          <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Поиск преподавателя..." aria-label="Фамилия или дисциплина"/>
+          <button type="submit" class="btn">Найти</button>
+        </form>
+        {% endif %}
+        <div class="header-actions">
+          <a class="btn btn-ghost" href="{{ login_url }}" target="_blank" rel="noopener">Войти в ЛК БМСТУ</a>
+          <span class="cookie-status {{ 'is-set' if cookie_set else 'is-empty' }}">{{ 'Cookie установлена' if cookie_set else 'Cookie не задана' }}</span>
+          {% if cookie_set %}
+          <a class="btn btn-ghost" href="{{ url_for('clear_cookie') }}">Сбросить Cookie</a>
+          {% endif %}
+        </div>
       </div>
     </header>
-    <main>
+    <main class="app-main">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for cat, msg in messages %}
@@ -42,5 +107,13 @@
     </main>
   </body>
 </html>
+
+
+
+
+
+
+
+
 
 

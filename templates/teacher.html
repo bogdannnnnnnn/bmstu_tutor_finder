@@ -1,49 +1,126 @@
 {% extends 'base.html' %}
 {% block title %}Расписание преподавателя{% endblock %}
+{% macro render_event(item) -%}
+  <div class="slot-event">
+    <div class="slot-title">{{ item.discipline.fullName or item.discipline.shortName }}</div>
+    {% if item.startTime or item.endTime %}
+    <div class="slot-time">
+      {% if item.startTime %}{{ item.startTime }}{% endif %}{% if item.startTime and item.endTime %} - {% endif %}{% if item.endTime %}{{ item.endTime }}{% endif %}
+    </div>
+    {% endif %}
+    {% if item.groups %}
+    <div class="slot-meta">Группы: {{ item.groups | map(attribute='name') | join(', ') }}</div>
+    {% endif %}
+    {% if item.audiences %}
+    <div class="slot-meta">Аудитории: {{ item.audiences | map(attribute='name') | join(', ') }}</div>
+    {% endif %}
+  </div>
+{%- endmacro %}
 {% block content %}
-  <div class="row" style="justify-content: space-between; align-items: flex-end;">
+  <div class="row" style="justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 16px;">
     <div>
       <h2 style="margin: 0 0 6px 0;">{{ info.title }}</h2>
       <div class="muted">UUID: {{ info.uuid }}</div>
     </div>
-    <div class="right">
+    <div class="right" style="display: flex; gap: 8px;">
       {% if info.link %}
-      <a class="btn" href="{{ info.link }}" target="_blank" rel="noopener">Экспорт ICS</a>
+      <a class="btn" href="{{ info.link }}" target="_blank" rel="noopener">Скачать ICS</a>
       {% endif %}
       <a class="btn" href="{{ url_for('api_teacher', uuid=info.uuid) }}" target="_blank" rel="noopener">JSON</a>
     </div>
   </div>
 
-  {% if not schedule %}
-    <div class="card">Расписание пусто.</div>
+  {% if not timetable_rows %}
+    <div class="card">Расписание пустое.</div>
   {% else %}
     <div class="card muted">Всего занятий: {{ schedule | length }}</div>
-    <ul class="list">
-      {% for item in schedule %}
-        <li class="card">
-          <div class="row" style="justify-content: space-between;">
-            <div><span class="badge">{{ ru_days.get(item.day, item.day) }}</span></div>
-            <div class="muted">{{ to_week_label(item.week) }}</div>
-          </div>
-          <div style="margin-top: 6px;">
-            <strong>{{ item.discipline.fullName or item.discipline.shortName }}</strong>
-            <div class="muted">{{ item.startTime }} — {{ item.endTime }} • Пара {{ item.time }}</div>
-          </div>
-          <div class="row" style="gap: 16px; margin-top: 6px;">
-            <div>
-              <div class="muted">Группы</div>
-              <div>{{ item.groups | map(attribute='name') | join(', ') }}</div>
-            </div>
-            <div>
-              <div class="muted">Аудитории</div>
-              <div>{% for a in item.audiences %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
-            </div>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
+    <div class="timetable-wrapper">
+      <table class="schedule-grid">
+        <thead>
+          <tr>
+            <th class="time-col">Время</th>
+            {% for day in day_order %}
+            <th>{{ ru_days.get(day, day) }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in timetable_rows %}
+            {% set slot = namespace(lines=[]) %}
+            {% if row.start and row.end %}
+              {% set _ = slot.lines.append(row.start ~ ' – ' ~ row.end) %}
+            {% elif row.start or row.end %}
+              {% set _ = slot.lines.append(row.start or row.end) %}
+            {% endif %}
+            {% if row.pair %}
+              {% set _ = slot.lines.append('пара ' ~ row.pair) %}
+            {% endif %}
+            {% if not slot.lines %}
+              {% set _ = slot.lines.append('Время не указано') %}
+            {% endif %}
+            <tr>
+              <th class="time-col" scope="row">
+                {% for line in slot.lines %}
+                  <div>{{ line }}</div>
+                {% endfor %}
+              </th>
+              {% for day in day_order %}
+                {% set cell = row.cells[day] %}
+                {% if cell.has_content %}
+                  <td>
+                    {% if cell.all %}
+                      <div class="slot-week-label">{{ week_names['all'] }}</div>
+                      {% for item in cell.all %}
+                        {{ render_event(item) }}
+                      {% endfor %}
+                    {% else %}
+                      <div class="slot-split">
+                        <div class="slot-column">
+                          <div class="slot-week-label">{{ week_names['ch'] }}</div>
+                          {% if cell.ch %}
+                            {% for item in cell.ch %}
+                              {{ render_event(item) }}
+                            {% endfor %}
+                          {% else %}
+                            <div class="slot-meta">Нет занятий</div>
+                          {% endif %}
+                        </div>
+                        <div class="slot-column">
+                          <div class="slot-week-label">{{ week_names['zn'] }}</div>
+                          {% if cell.zn %}
+                            {% for item in cell.zn %}
+                              {{ render_event(item) }}
+                            {% endfor %}
+                          {% else %}
+                            <div class="slot-meta">Нет занятий</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                    {% for group in cell.other %}
+                      <div class="slot-week-label" style="margin-top: 8px;">{{ group.label }}</div>
+                      {% for item in group.items %}
+                        {{ render_event(item) }}
+                      {% endfor %}
+                    {% endfor %}
+                  </td>
+                {% else %}
+                  <td class="empty"></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% endif %}
-
 {% endblock %}
+
+
+
+
+
+
+
 
 
